@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xyp.ujsweb.mapper.ScoreItemMapper">
+    <resultMap id="ScoreItemMapper" type="ScoreItem">
+        <result column="pk_user_name" property="userName"/>
+        <result column="pk_time" property="time"/>
+    </resultMap>
+    <!--插入游戏成绩记录-->
+    <insert id="insertScoreItem" parameterType="ScoreItem">
+    INSERT INTO ujs_scoreitem ( pk_user_name, score, pk_time )
+    VALUES( #{userName}, #{score}, #{time} );
+    </insert>
+    <!--根据用户名查找出此用户的所有成绩记录-->
+    <select id="selectScoreItemByUserName" parameterType="String" resultType="ScoreItem" resultMap="ScoreItemMapper">
+        select * from ujs_scoreitem where pk_user_name=#{username}
+    </select>
+    <!--根据用户名查出此用户的好友游戏排名-->
+    <select id="selectFriendRankByUserName" parameterType="String" resultType="ScoreItem" resultMap="ScoreItemMapper">
+        SELECT
+            b.*
+        FROM
+            ( SELECT ujs_user.pk_user_name FROM ujs_friend, ujs_user
+            WHERE ujs_friend.pk_referenced = `ujs_user`.pk_user_name
+            AND pk_reference = #{username} UNION SELECT #{username} ) AS a,
+            ( SELECT pk_user_name, MAX( score ) score, pk_time FROM `ujs_scoreitem` GROUP BY pk_user_name ) AS b
+        WHERE
+            a.pk_user_name = b.pk_user_name
+        ORDER BY
+            b.score DESC
+    </select>
+</mapper>
